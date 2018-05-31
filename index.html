@@ -1,0 +1,325 @@
+<head>
+  <title>EvoDots</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser-ce/2.8.4/phaser.min.js"></script>
+</head>
+<body>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.1/css/materialize.css">
+<div>
+	<button class="waves-effect waves-light cyan darken-1 btn" onclick="createNew()" id="newPopulation">New Population</button>
+	<button onclick="reproduce()" class="waves-effect waves-light cyan darken-4 btn">Reproduce</button>
+	<button class="waves-effect waves-light cyan darken-4 btn" onclick="pauseGame()">pause</button>
+	<button class="waves-effect waves-light cyan darken-4 btn" onclick="changeMode()">Change Mode</button>
+	<button class="waves-effect waves-light cyan darken-4 btn" id="dotCount">Dot Count: 0</button>
+	<div class="ss" id="dotWarning">
+		
+	</div>
+		
+	</div>
+
+	<div>
+		<div id="phaser-example" class="ss"></div>
+		<div class="ss">
+			<div id="initialGraphDiv"></div>
+			<div id="graphDiv"></div>
+		</div>
+		<!-- 	add border to div -->
+	</div>
+</body>
+
+<style>
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #d3efff;
+/* 		color: black; */
+}
+
+button {
+/* 	padding-top = 10px; */
+}
+
+.ss {
+	display: inline-block;
+}
+</style>
+
+<script>
+var game = new Phaser.Game(600, 800, Phaser.NO_SCALE, "phaser-example", {
+	preload: preload,
+	create: create,
+	update: update
+});
+
+var sizeMode = true;
+
+var paused = false;
+
+var dotSpeeds = [];
+
+var dotAmmounts = [0,0,0,0,0];
+
+var speeds = [20, 50, 125, 175, 300];
+
+var colors = ["0x222222", "0x9047ff", "0x01a306", "0xe2000b", "0xffae00"];
+
+var sizes = [48,35,25,15,10]
+
+function pauseGame() {
+	if (paused) {
+		for (var i = 0; i < dots.length; i++) {
+			var dot = dots[i];
+			dot.body.velocity.x = dotSpeeds[i].xSpeed;
+			dot.body.velocity.y = dotSpeeds[i].ySpeed;
+		}
+		paused = false;
+	} else {
+		for (var i = 0; i < dots.length; i++) {
+			var dot = dots[i];
+			var speedObj = {
+				xSpeed: dot.body.velocity.x,
+				ySpeed: dot.body.velocity.y
+			};
+			dot.body.velocity.x = 0;
+			dot.body.velocity.y = 0;
+			dotSpeeds.push(speedObj);
+		}
+		paused = true;
+	}
+}
+
+function reproduce() {
+	if (!paused && dots.length < 10000) {
+		if(sizeMode) {
+		var origLength = dots.length;
+		for (var i = 0; i < origLength; i++) {
+			var dot = dots[i];
+			var xSpeed = dot.body.velocity.x * negOrPosRand();
+			var ySpeed = dot.body.velocity.y * negOrPosRand();
+			while (ySpeed == dot.body.velocity.y && xSpeed == dot.body.velocity.x) {
+				xSpeed *= negOrPosRand();
+				ySpeed *= negOrPosRand();
+			}
+			var xPos = dot.position.x + 10;
+			var yPos = dot.position.y;
+			var size = dot.height;
+			var colorIndex = sizes.indexOf(size);
+			makeDot([xPos, yPos, xSpeed, ySpeed, 1, colors[colorIndex], size]);
+		}
+			
+			
+		} else {
+			var origLength = dots.length;
+		for (var i = 0; i < origLength; i++) {
+			var dot = dots[i];
+			//dotInfo = [xPos, yPos, xSpeed, ySpeed, bounceSpeed, color, size]
+			var xPos = dot.position.x + 10;
+			var yPos = dot.position.y;
+			var xSpeed = dot.body.velocity.x * negOrPosRand();
+			var ySpeed = dot.body.velocity.y * negOrPosRand();
+			while (ySpeed == dot.body.velocity.y && xSpeed == dot.body.velocity.x) {
+				xSpeed *= negOrPosRand();
+				ySpeed *= negOrPosRand();
+			}
+			var bounceSpeed = 1;
+			var colorIndex = speeds.indexOf(Math.abs(xSpeed));
+			makeDot([xPos, yPos, xSpeed, ySpeed, bounceSpeed, colors[colorIndex], 20]);
+		}
+		}
+		console.log(dots.length);
+		for(var k = 0; k < dotAmmounts.length; k++) {
+			dotAmmounts[k]*=2;
+		}
+		updateGraph()
+		if(dots.length > 1000) {
+			document.getElementById("dotWarning").innerHTML = "<button class=\"waves-effect waves-light red darken-4 btn\">Warning: Dot counts over 1000 will take some time to reproduce and may slow down your computer</button>"
+		}
+	} else {
+	}
+	// console.log(dots.length);
+}
+
+
+function preload() {
+	game.load.crossOrigin = "anonymous";
+	game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+	game.scale.pageAlignHorizontally = true;
+	game.scale.pageAlignVertically = true;
+	game.stage.backgroundColor = "#d3efff";
+}
+
+var dots = [];
+
+function create() {
+	game.physics.startSystem(Phaser.Physics.ARCADE);
+	
+}
+
+function createNew() {
+	document.getElementById("dotWarning").innerHTML = ""
+	document.getElementById("newPopulation").classList.add('darken-4');
+	document.getElementById("newPopulation").classList.remove('darken-1');
+	killAll();
+	dots = [];
+	if(sizeMode) {
+		for (var i = 0; i < 50; i++) {
+			var rand = Math.floor(Math.random() * 5);
+			makeSizedDot(rand);
+			dotAmmounts[rand]++;
+		}
+	} else {
+		for (var i = 0; i < 50; i++) {
+			var rand = Math.floor(Math.random() * 5);
+			makeSpeededDot(rand);
+			dotAmmounts[rand]++;
+		}
+	}
+	updateGraph();
+	makeInitialGraph();
+}
+
+//dotInfo = [xPos, yPos, xSpeed, ySpeed, bounceSpeed, color, size]
+function makeDot(dotInfo) {
+	var graphics = game.add.graphics(dotInfo[0], dotInfo[1]);
+	graphics.beginFill(dotInfo[5]);
+	graphics.drawCircle(0, 0, dotInfo[6]);
+	graphics.endFill();
+	game.physics.arcade.enable(graphics);
+	graphics.body.velocity.x = dotInfo[2];
+	graphics.body.velocity.y = dotInfo[3];
+	graphics.body.bounce.set(dotInfo[4]);
+	graphics.body.collideWorldBounds = true;
+	graphics.inputEnabled = true;
+	graphics.input.useHandCursor = true;
+	graphics.events.onInputUp.add(onClick, this);
+	dots.push(graphics);
+	document.getElementById("dotCount").innerHTML = "Dot Count: " + dots.length;
+}
+
+function makeSpeededDot(speed) {
+	var xPos = Math.floor(Math.random() * game.world.width);
+	var yPos = Math.floor(Math.random() * game.world.height);
+	var negModX = negOrPosRand();
+	var negModY = negOrPosRand();
+	makeDot([
+		xPos,
+		yPos,
+		speeds[speed] * negModX,
+		speeds[speed] * negModY,
+		1,
+		colors[speed],
+		20
+	]);
+}
+
+function makeSizedDot(size) {
+	var xPos = Math.floor(Math.random() * game.world.width);
+	var yPos = Math.floor(Math.random() * game.world.height);
+	var negModX = negOrPosRand();
+	var negModY = negOrPosRand();
+	makeDot([
+		xPos,
+		yPos,
+		30 + ((Math.random() * 100) - 50),
+		30 + ((Math.random() * 100) - 50),
+		1,
+		colors[size],
+		sizes[size]
+	]);
+}
+
+function killAll() {
+	numDots = dots.length;
+	for(var i = 0; i < numDots; i++) {
+		dots[i].destroy();
+		dotAmmounts = [0,0,0,0,0]
+	}
+}
+
+function onClick(target, pointer) {
+	if (!paused) {
+		if(sizeMode) {
+			var size = target.height;
+			var colorIndex = sizes.indexOf(Math.abs(size));
+			dotAmmounts[colorIndex]--;
+			target.kill();
+			var index = dots.indexOf(target);
+			dots.splice(index, 1);
+		} else {
+			var xSpeed = target.body.velocity.x;
+			var colorIndex = speeds.indexOf(Math.abs(xSpeed));
+			dotAmmounts[colorIndex]--;
+			target.kill();
+			var index = dots.indexOf(target);
+			dots.splice(index, 1);
+		}
+		updateGraph();	
+	}
+	document.getElementById("dotCount").innerHTML = "Dot Count: " + dots.length;
+}
+
+function update() {
+}
+
+function negOrPosRand() {
+	var val = Math.floor(Math.random() * (1 - -1 + 1)) + -1;
+	while (val == 0) {
+		val = Math.floor(Math.random() * (1 - -1 + 1)) + -1;
+	}
+	return val;
+}
+
+function makeInitialGraph() {
+	var layout = {
+			title: 'Starting Population',
+				height: 400,
+
+	}
+	var data = [
+		{
+			x: ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"],
+			y: dotAmmounts,
+			type: "bar",
+			marker: {
+				color: [
+					"rgba(34,34,34,1)",
+					"rgba(144,71,255,1)",
+					"rgba(1,163,6,1)",
+					"rgba(226,0,11,1)",
+					"rgba(255,174,0,1)"
+				]
+			}
+		}
+	];
+	Plotly.newPlot("initialGraphDiv", data, layout, {displayModeBar: false});
+}
+
+function updateGraph() {
+	var layout = {
+			title: 'Current Population',
+		height: 400,
+	}
+	var data = [
+		{
+			x: ["Type 1", "Type 2", "Type 3", "Type 4", "Type 5"],
+			y: dotAmmounts,
+			type: "bar",
+			marker: {
+				color: [
+					"rgba(34,34,34,1)",
+					"rgba(144,71,255,1)",
+					"rgba(1,163,6,1)",
+					"rgba(226,0,11,1)",
+					"rgba(255,174,0,1)"
+				]
+			}
+		}
+	];
+	Plotly.newPlot("graphDiv", data, layout, {displayModeBar: false});
+}
+
+function changeMode() {
+	sizeMode = !sizeMode;
+	createNew();
+}
+</script>
