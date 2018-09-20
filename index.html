@@ -20,7 +20,7 @@
         <li><a href = "#" onclick="changeMode('mutate')">Mutation</a></li>
     </ul>
     <a class = "btn dropdown-button waves-effect waves-light cyan darken-4" href = "#" data-activates = "dropdown">Change Mode</a>
-    <button class="waves-effect waves-light cyan darken-4 btn" onclick="pauseGame()">pause</button>
+   <!-- <button class="waves-effect waves-light cyan darken-4 btn" onclick="pauseGame()">pause</button> -->
     <button class="waves-effect waves-light cyan darken-3 btn" id="dotCount">Dot Count: 0</button>
     <div class="ss" id="dotWarning">
     </div>
@@ -44,46 +44,32 @@
         background-color: #d3efff;
         /* 		color: black; */
     }
-
     button {
         /* 	padding-top = 10px; */
     }
-
     .ss {
         display: inline-block;
     }
 </style>
 
 <script>
-
     var width = window.innerWidth;
     var height = window.innerHeight - (document.getElementById("newPopulation").getBoundingClientRect().height * 2);
-
     console.log("Real height: " + window.innerHeight);
     console.log("Adjusted height " + height);
     console.log("Offset By: " + document.getElementById("newPopulation").getBoundingClientRect().height)
-
-
     var game = new Phaser.Game(width / 2.1, height / 1.05, Phaser.EXACT_FIT, "phaser-example", {
         preload: preload,
         create: create,
         update: update
     });
-
     var mode = "size";
-
     var paused = false;
-
     var dotSpeeds = [];
-
     var dotAmmounts = [0, 0, 0, 0, 0];
-
     var speeds = [20, 50, 125, 175, 300];
-
     var colors = ["0x222222", "0x9047ff", "0x01a306", "0xe2000b", "0xffae00"];
-
     var sizes = [48, 35, 25, 15, 10];
-
     function pauseGame() {
         if (paused) {
             for (var i = 0; i < dots.length; i++) {
@@ -106,7 +92,6 @@
             paused = true;
         }
     }
-
     function reproduce() {
         if (!paused && dots.length < 10000) {
             if (mode == "size") {
@@ -182,8 +167,6 @@
         }
         // console.log(dots.length);
     }
-
-
     function preload() {
         game.load.crossOrigin = "anonymous";
         game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
@@ -191,14 +174,10 @@
         game.scale.pageAlignVertically = true;
         game.stage.backgroundColor = "#d3efff";
     }
-
     var dots = [];
-
     function create() {
         game.physics.startSystem(Phaser.Physics.ARCADE);
-
     }
-
     function createNew() {
         document.getElementById("dotWarning").innerHTML = ""
         document.getElementById("newPopulation").classList.add('darken-4');
@@ -232,7 +211,6 @@
         updateGraph();
         makeInitialGraph();
     }
-
     //dotInfo = [xPos, yPos, xSpeed, ySpeed, bounceSpeed, color, size]
     function makeDot(dotInfo) {
         var graphics = game.add.graphics(dotInfo[0], dotInfo[1]);
@@ -250,7 +228,6 @@
         dots.push(graphics);
         document.getElementById("dotCount").innerHTML = "Dot Count: " + dots.length;
     }
-
     function makeSpeededDot(speed) {
         var xPos = Math.floor(Math.random() * game.world.width);
         var yPos = Math.floor(Math.random() * game.world.height);
@@ -266,7 +243,6 @@
             20
         ]);
     }
-
     function makeSizedDot(size) {
         var xPos = Math.floor(Math.random() * game.world.width);
         var yPos = Math.floor(Math.random() * game.world.height);
@@ -282,7 +258,6 @@
             sizes[size]
         ]);
     }
-
     function killAll() {
         numDots = dots.length;
         for (var i = 0; i < numDots; i++) {
@@ -290,7 +265,6 @@
             dotAmmounts = [0, 0, 0, 0, 0]
         }
     }
-
     function onClick(target, pointer) {
         if (!paused) {
             if (mode == "size") {
@@ -321,10 +295,8 @@
         }
         document.getElementById("dotCount").innerHTML = "Dot Count: " + dots.length;
     }
-
     function update() {
     }
-
     function negOrPosRand() {
         var val = Math.floor(Math.random() * (1 - -1 + 1)) + -1;
         while (val == 0) {
@@ -332,13 +304,11 @@
         }
         return val;
     }
-
     function makeInitialGraph() {
         var layout = {
             title: 'Starting Population',
             height: height / 2,
             width: width / 2,
-
         }
         var data = [
             {
@@ -358,7 +328,6 @@
         ];
         Plotly.newPlot("initialGraphDiv", data, layout, {displayModeBar: false});
     }
-
     function updateGraph() {
         var layout = {
             title: 'Current Population',
@@ -383,7 +352,6 @@
         ];
         Plotly.newPlot("graphDiv", data, layout, {displayModeBar: false});
     }
-
     function changeMode(newMode) {
         mode = newMode;
         createNew();
